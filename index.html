@@ -5666,24 +5666,24 @@ function renderProductsFromJSON(products) {
     applyVisibilityToAll();
 }
 
-// Load catalog from GitHub (raw URL, no auth needed for public repo)
+// Load catalog from GitHub — public repo, no token needed (raw CDN)
+const KTB_GH_DEFAULT_REPO   = 'aliand0810/ktb-commerce';
+const KTB_GH_DEFAULT_BRANCH = 'main';
+
 async function loadFromGitHub(manual = false) {
-    const repo   = localStorage.getItem('ktb_gh_repo');
-    const branch = localStorage.getItem('ktb_gh_branch') || 'main';
-    const token  = localStorage.getItem('ktb_gh_token');
-    if (!repo || !token) {
-        if (manual) showToast('Configurez GitHub dans Paramètres', 'error');
-        return;
-    }
+    const repo   = localStorage.getItem('ktb_gh_repo')   || KTB_GH_DEFAULT_REPO;
+    const branch = localStorage.getItem('ktb_gh_branch') || KTB_GH_DEFAULT_BRANCH;
     if (manual) ghStatus('Chargement en cours…', 'var(--gray-500)');
     try {
-        const res = await fetch(
-            `https://api.github.com/repos/${repo}/contents/products.json?ref=${branch}`,
-            { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
-        );
+        // Raw URL — no auth needed for public repo
+        const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/products.json?t=${Date.now()}`;
+        const res = await fetch(rawUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const products = JSON.parse(atob(data.content.replace(/\n/g,'')));
+        const products = await res.json();
+        if (!Array.isArray(products) || products.length === 0) {
+            if (manual) ghStatus('Catalogue vide sur GitHub', 'var(--gray-500)');
+            return;
+        }
         renderProductsFromJSON(products);
         if (manual) {
             showToast(`${products.length} articles chargés depuis GitHub !`);
@@ -5737,16 +5737,19 @@ async function saveToGitHub() {
     }
 }
 
-// Init GitHub settings fields
+// Init GitHub settings fields + auto-load from public repo on startup
 (function() {
-    const repo   = localStorage.getItem('ktb_gh_repo');
-    const branch = localStorage.getItem('ktb_gh_branch');
-    const token  = localStorage.getItem('ktb_gh_token');
-    if (repo)   { const el = document.getElementById('setting-gh-repo');   if (el) el.value = repo; }
-    if (branch) { const el = document.getElementById('setting-gh-branch'); if (el) el.value = branch; }
-    if (token)  { const el = document.getElementById('setting-gh-token');  if (el) el.value = token; }
-    // Auto-load on startup if configured
-    if (repo && token) loadFromGitHub(false);
+    const repo   = localStorage.getItem('ktb_gh_repo')   || KTB_GH_DEFAULT_REPO;
+    const branch = localStorage.getItem('ktb_gh_branch') || KTB_GH_DEFAULT_BRANCH;
+    const token  = localStorage.getItem('ktb_gh_token')  || '';
+    const elRepo   = document.getElementById('setting-gh-repo');
+    const elBranch = document.getElementById('setting-gh-branch');
+    const elToken  = document.getElementById('setting-gh-token');
+    if (elRepo)   elRepo.value   = repo;
+    if (elBranch) elBranch.value = branch;
+    if (elToken && token)  elToken.value  = token;
+    // Auto-load on startup — no token needed for public repo
+    loadFromGitHub(false);
 })();
 </script>
 
