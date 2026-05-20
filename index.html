@@ -5554,10 +5554,17 @@ applyVisibilityToAll();
 // ═══════════════════════════════════════════════
 // WHATSAPP SETTINGS
 // ═══════════════════════════════════════════════
+function updateWaFloatBtn(number) {
+    const btn = document.querySelector('.wa-btn');
+    if (btn && number) btn.href = `https://wa.me/${number.replace(/\D/g,'')}`;
+}
+
 function saveWaSettings() {
     const num = document.getElementById('setting-wa-number').value.trim();
     if (!num) { showToast('Numéro vide', 'error'); return; }
-    localStorage.setItem('ktb_wa_number', num.replace(/\D/g,''));
+    const clean = num.replace(/\D/g,'');
+    localStorage.setItem('ktb_wa_number', clean);
+    updateWaFloatBtn(clean);
     showToast('Numéro WhatsApp enregistré !');
 }
 
@@ -5567,6 +5574,7 @@ function saveWaSettings() {
     if (saved) {
         const el = document.getElementById('setting-wa-number');
         if (el) el.value = saved;
+        updateWaFloatBtn(saved);
     }
 })();
 
