@@ -1370,7 +1370,7 @@
         }
         .aac-list-header {
             display: grid;
-            grid-template-columns: 48px 1fr 90px 160px 120px 80px 80px;
+            grid-template-columns: 80px 1fr 90px 160px 120px 80px 80px;
             gap: 12px; align-items: center;
             padding: 10px 16px;
             background: var(--gray-100);
@@ -1380,7 +1380,7 @@
         }
         .aac-row {
             display: grid;
-            grid-template-columns: 48px 1fr 90px 160px 120px 80px 80px;
+            grid-template-columns: 80px 1fr 90px 160px 120px 80px 80px;
             gap: 12px; align-items: center;
             padding: 10px 16px;
             border-bottom: 1px solid var(--gray-100);
@@ -3714,7 +3714,9 @@ function showToast(msg, type = 'success', duration = 3000) {
 }
 
 // ===== CART =====
-let cart = [];
+let cart = (function() {
+    try { return JSON.parse(localStorage.getItem('ktb_cart') || '[]'); } catch(e) { return []; }
+})();
 
 function parsePrice(card) {
     const priceEl = card.querySelector('.card-price');
@@ -3729,6 +3731,8 @@ function cartTotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
 function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
 
 function renderCart() {
+    // Persist cart to localStorage
+    try { localStorage.setItem('ktb_cart', JSON.stringify(cart)); } catch(e) {}
     const count = cartCount();
     const total = cartTotal();
     document.querySelector('.badge').textContent = count;
@@ -3847,7 +3851,12 @@ document.querySelector('.btn-checkout').addEventListener('click', () => {
 });
 
 // ===== WISHLIST =====
-const wishlist = new Set();
+const wishlist = new Set((function() {
+    try { return JSON.parse(localStorage.getItem('ktb_wishlist') || '[]'); } catch(e) { return []; }
+})());
+function saveWishlist() {
+    try { localStorage.setItem('ktb_wishlist', JSON.stringify([...wishlist])); } catch(e) {}
+}
 
 document.querySelectorAll('.card-wishlist').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3865,6 +3874,7 @@ document.querySelectorAll('.card-wishlist').forEach(btn => {
             btn.innerHTML = '<i class="fas fa-heart" style="color:var(--accent)"></i>';
             showToast(`${brand} ajouté aux favoris !`);
         }
+        saveWishlist();
     });
 });
 
@@ -3889,20 +3899,18 @@ searchInput.addEventListener('keydown', e => {
 });
 
 // ===== CATEGORY FILTER =====
-function cardMatchesCategory(card, cat) {
-    if (cat === 'tendances') return true;
+// Uses card.dataset.group + groups array — works for ALL articles (static + dynamically added)
+function cardMatchesCategory(card, chipText) {
+    if (chipText === 'tendances' || chipText === 'tout') return true;
+    // Match chip label to group name (case-insensitive, ignore emoji prefix)
+    const cleanChip = chipText.replace(/^[\p{Emoji}\s]+/u, '').trim().toLowerCase();
+    const matchedGroup = groups.find(g => g.name.toLowerCase() === cleanChip);
+    if (matchedGroup) {
+        return card.dataset.group === matchedGroup.id;
+    }
+    // Fallback: text search in title+brand if no group match
     const text = (card.querySelector('.card-title').textContent + ' ' + card.querySelector('.card-brand').textContent).toLowerCase();
-    const rules = {
-        'bonbons': () => /jelly belly|oufti/.test(text),
-        'chocolats': () => /reese|m&m|chocolat|bounty|tablette|kayadif/.test(text),
-        'boissons': () => /red bull|fanta|tonic|energy drink/.test(text),
-        'snacks': () => /chip|snack|popcorn/.test(text),
-        'japon': () => /japan|japon/.test(text),
-        'états-unis': () => /reese|jelly belly|m&m|red bull|fanta mango/.test(text),
-        'royaume-uni': () => /bounty/.test(text),
-        'biscuits': () => /buenos|bâtonnets|biscuit/.test(text),
-    };
-    return rules[cat] ? rules[cat]() : true;
+    return text.includes(cleanChip);
 }
 
 document.querySelectorAll('.cat-chip').forEach(chip => {
@@ -3910,10 +3918,12 @@ document.querySelectorAll('.cat-chip').forEach(chip => {
         e.preventDefault();
         document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        const cat = chip.textContent.trim().toLowerCase().replace(/^[^\w]+/, '');
+        // Get text without leading emoji
+        const rawText = chip.textContent.trim();
+        const chipLabel = rawText.replace(/^[\p{Emoji}\s]+/u, '').trim().toLowerCase();
         searchInput.value = '';
         document.querySelectorAll('.card').forEach(card => {
-            card.classList.toggle('hidden', !cardMatchesCategory(card, cat));
+            card.classList.toggle('hidden', !cardMatchesCategory(card, chipLabel));
         });
     });
 });
@@ -4301,6 +4311,18 @@ loadStatsFromStorage();
 
 // Init group selects on load
 populateGroupSelects();
+// Render cart on load to restore badge count from localStorage
+renderCart();
+// Restore wishlist visual state on static cards
+(function restoreWishlistUI() {
+    document.querySelectorAll('.card').forEach(card => {
+        const title = card.querySelector('.card-title')?.textContent.trim();
+        if (title && wishlist.has(title)) {
+            const btn = card.querySelector('.card-wishlist');
+            if (btn) { btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-heart" style="color:var(--accent)"></i>'; }
+        }
+    });
+})();
 
 // ===== ADMIN =====
 let ADMIN_EMAIL = localStorage.getItem('ktb_admin_email') || 'admin@ktb.fr';
@@ -4581,7 +4603,19 @@ function saveProduct() {
     }, 100);
 }
 
-function buildCard({ imageUrl, brand, title, priceHtml, badgeType, badgeText }) {
+// Build star rating HTML from score (0-5, supports .5 steps)
+function buildRatingStars(score) {
+    const s = Math.max(0, Math.min(5, parseFloat(score) || 4));
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        if (s >= i) html += '<i class="fas fa-star"></i>';
+        else if (s >= i - 0.5) html += '<i class="fas fa-star-half-alt"></i>';
+        else html += '<i class="far fa-star"></i>';
+    }
+    return html;
+}
+
+function buildCard({ imageUrl, brand, title, priceHtml, badgeType, badgeText, score }) {
     const card = document.createElement('div');
     card.className = 'card';
     const badgeHtml = (badgeType !== 'none' && badgeText) ? `<span class="card-badge ${badgeType}">${badgeText}</span>` : '';
@@ -4596,7 +4630,7 @@ function buildCard({ imageUrl, brand, title, priceHtml, badgeType, badgeText }) 
             <div class="card-brand">${brand}</div>
             <div class="card-title">${title}</div>
             <div class="card-rating">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                ${buildRatingStars(score || 4)}
                 <span>(0)</span>
             </div>
             <div class="card-footer">
@@ -4622,6 +4656,7 @@ function wireNewCard(card) {
             btn.innerHTML = '<i class="fas fa-heart" style="color:var(--accent)"></i>';
             showToast(`${b} ajouté aux favoris !`);
         }
+        saveWishlist();
     });
 
     // Add to cart
@@ -4635,6 +4670,7 @@ function wireNewCard(card) {
         const existing = cart.find(i => i.title === title);
         if (existing) existing.qty++; else cart.push({ thumb, initials, brand, title, price, qty: 1 });
         renderCart();
+        animateBadge();
         openCart();
         showToast(`${brand} ajouté au panier !`);
     });
@@ -4658,8 +4694,12 @@ function deleteCard(card) {
     card.style.transition = 'opacity 0.3s, transform 0.3s';
     card.style.opacity = '0';
     card.style.transform = 'scale(0.9)';
-    setTimeout(() => card.remove(), 300);
+    setTimeout(() => {
+        card.remove();
+        if (typeof currentTab !== 'undefined' && currentTab === 'articles') renderArticlesPanel();
+    }, 300);
     showToast(`"${brand}" supprimé`, 'error');
+    logActivity('del', `Article supprimé : ${brand}`);
 }
 
 // ===== PASSWORD =====
@@ -4743,24 +4783,13 @@ if (_imgUrlInput) {
     });
 }
 
-// Live visible toggle label
+// Live visible toggle label (single listener — duplicate removed)
 document.getElementById('edit-visible').addEventListener('change', e => {
     const lbl = document.getElementById('edit-visible-label');
     lbl.textContent = e.target.checked ? 'Visible' : 'Masqué';
     lbl.style.color = e.target.checked ? 'var(--success)' : 'var(--gray-500)';
 });
-
-// Live image URL preview
-document.getElementById('edit-image-url').addEventListener('input', e => {
-    const preview = document.getElementById('img-url-preview');
-    const url = e.target.value.trim();
-    if (!url) { preview.innerHTML = '🖼️'; preview.style.fontSize = '24px'; return; }
-    const img = document.createElement('img');
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-    img.onerror = () => { preview.innerHTML = '❌'; preview.style.fontSize = '20px'; };
-    img.onload = () => { preview.innerHTML = ''; preview.appendChild(img); };
-    img.src = url;
-});
+// Duplicate edit-image-url listener removed (handled above by _imgUrlInput)
 
 // ===== HERO BUTTONS =====
 document.querySelector('.btn-hero-primary').addEventListener('click', e => {
@@ -4992,6 +5021,7 @@ document.getElementById('btn-qv-wish').addEventListener('click', () => {
         qvWish.innerHTML = '<i class="fas fa-heart" style="color:var(--accent)"></i>';
         showToast(`${brand} ajouté aux favoris !`);
     }
+    saveWishlist();
 });
 
 function injectQuickViewButtons() {
@@ -5213,10 +5243,7 @@ removeEditOverlays = function() {
 };
 
 // openEditModal + openAddModal handle stock + visibility natively — no patches needed
-document.getElementById('edit-visible').addEventListener('change', function() {
-    document.getElementById('edit-visible-label').textContent = this.checked ? 'Visible' : 'Masqué';
-    document.getElementById('edit-visible-label').style.color = this.checked ? 'var(--success)' : 'var(--gray-500)';
-});
+// edit-visible listener already registered above — no duplicate here
 
 // saveProduct handles stock + visibility natively — no patch needed
 
@@ -5274,7 +5301,10 @@ renderArticlesPanel = function() {
         const maskedHtml = !visible ? '<div class="aac-thumb-masked"><i class="fas fa-eye-slash"></i></div>' : '';
 
         return `<div class="aac-row${!visible ? ' aac-row-hidden' : ''}" data-card-idx="${idx}" data-search="${brand.toLowerCase()} ${title.toLowerCase()}">
-            <div class="aac-thumb">${thumbHtml}${maskedHtml}</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" class="bulk-check" data-idx="${idx}" onchange="updateBulkBar()" style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);">
+                <div class="aac-thumb">${thumbHtml}${maskedHtml}</div>
+            </div>
             <div class="aac-info">
                 <div class="aac-info-brand">${brand}</div>
                 <div class="aac-info-title" title="${title}">${title}</div>
@@ -5295,7 +5325,7 @@ renderArticlesPanel = function() {
             </div>
             <div class="aac-actions">
                 <button class="aac-action-btn" onclick="openEditModal(document.querySelectorAll('.card')[${idx}])" title="Modifier"><i class="fas fa-pen"></i></button>
-                <button class="aac-action-btn del" onclick="deleteCard(document.querySelectorAll('.card')[${idx}]);renderArticlesPanel();" title="Supprimer"><i class="fas fa-trash"></i></button>
+                <button class="aac-action-btn del" onclick="deleteCard(document.querySelectorAll('.card')[${idx}]);" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
         </div>`;
     }).join('');
@@ -5303,8 +5333,8 @@ renderArticlesPanel = function() {
     listWrap.innerHTML = `
         <div class="aac-list">
             <div class="aac-list-header">
+                <div style="display:flex;align-items:center;gap:6px;"><input type="checkbox" onchange="toggleBulkAll(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);"> Article</div>
                 <div></div>
-                <div>Article</div>
                 <div>Prix</div>
                 <div>Stock</div>
                 <div>Groupe</div>
@@ -5639,7 +5669,7 @@ switchTab = function(tab) {
     _origSwitchTab(tab);
     if (tab === 'journal') renderActivityLog();
     if (tab === 'stock') renderStockPanel();
-    if (tab === 'articles') renderArticlesPanel();
+    // 'articles' already handled in _origSwitchTab — no double call
 };
 
 // Apply visibility on load
@@ -5717,6 +5747,11 @@ function serializeProducts() {
         const badge   = card.querySelector('.card-badge');
         const gridIdx = grids.findIndex(g => g.contains(card));
         const rating  = card.querySelector('.card-rating span')?.textContent.replace(/[()]/g,'').trim() || '0';
+        // Count filled stars for score
+        const starEls = card.querySelectorAll('.card-rating i');
+        const filled = [...starEls].filter(i => i.classList.contains('fa-star') && !i.classList.contains('fa-star-half-alt')).length;
+        const half   = [...starEls].filter(i => i.classList.contains('fa-star-half-alt')).length;
+        const score  = filled + half * 0.5;
         return {
             brand:     card.querySelector('.card-brand').textContent.trim(),
             title:     card.querySelector('.card-title').textContent.trim(),
@@ -5730,7 +5765,8 @@ function serializeProducts() {
             group:     card.dataset.group || '',
             stock:     card.dataset.stock ?? null,
             visible:   card.dataset.visible !== 'false',
-            rating
+            rating,
+            score
         };
     });
 }
@@ -5748,7 +5784,8 @@ function renderProductsFromJSON(products) {
             title:     p.title,
             priceHtml,
             badgeType: p.badge || 'none',
-            badgeText: p.badgeText || ''
+            badgeText: p.badgeText || '',
+            score:     p.score || 4
         });
         card.dataset.group = p.group || '';
         if (p.stock !== null && p.stock !== undefined && p.stock !== '') card.dataset.stock = p.stock;
