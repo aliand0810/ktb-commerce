@@ -4682,10 +4682,20 @@ function toggleCustomCursor(enabled) {
     if (lbl) { lbl.textContent = enabled ? 'Activé' : 'Désactivé'; lbl.style.color = enabled ? 'var(--success)' : 'var(--gray-500)'; }
 })();
 
-// Live emoji preview
-document.getElementById('edit-emoji').addEventListener('input', e => {
-    document.getElementById('emoji-preview').textContent = e.target.value || '🛍️';
-});
+// Live image URL preview (emoji field removed)
+const _imgUrlInput = document.getElementById('edit-image-url');
+if (_imgUrlInput) {
+    _imgUrlInput.addEventListener('input', e => {
+        const preview = document.getElementById('img-url-preview');
+        if (!preview) return;
+        const url = e.target.value.trim();
+        if (url) {
+            preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML='<i class=\\'fas fa-image\\' style=\\'color:var(--gray-400);font-size:20px;\\'></i>'">`;
+        } else {
+            preview.innerHTML = '<i class="fas fa-image" style="color:var(--gray-400);font-size:20px;"></i>';
+        }
+    });
+}
 
 // Live visible toggle label
 document.getElementById('edit-visible').addEventListener('change', e => {
