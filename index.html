@@ -4607,6 +4607,7 @@ function buildCard({ imageUrl, brand, title, priceHtml, badgeType, badgeText }) 
 }
 
 function wireNewCard(card) {
+    // Wishlist
     card.querySelector('.card-wishlist').addEventListener('click', () => {
         const t = card.querySelector('.card-title').textContent.trim();
         const b = card.querySelector('.card-brand').textContent.trim();
@@ -4621,6 +4622,8 @@ function wireNewCard(card) {
             showToast(`${b} ajouté aux favoris !`);
         }
     });
+
+    // Add to cart
     card.querySelector('.btn-cart').addEventListener('click', () => {
         const imgEl = card.querySelector('.card-img img');
         const brand = card.querySelector('.card-brand')?.textContent.trim() || '';
@@ -4634,6 +4637,18 @@ function wireNewCard(card) {
         openCart();
         showToast(`${brand} ajouté au panier !`);
     });
+
+    // Quick view button (inline — no second wireNewCard needed)
+    const qv = document.createElement('div');
+    qv.className = 'card-quick-view';
+    qv.innerHTML = '<button class="btn-quick-view"><i class="fas fa-eye" style="margin-right:6px;"></i> Aperçu rapide</button>';
+    qv.querySelector('button').addEventListener('click', e => { e.stopPropagation(); openQuickView(card); });
+    const cardImgEl = card.querySelector('.card-img');
+    if (cardImgEl) cardImgEl.appendChild(qv);
+
+    // Reveal animation
+    card.classList.add('reveal');
+    if (typeof revealObserver !== 'undefined') revealObserver.observe(card);
 }
 
 function deleteCard(card) {
@@ -4987,18 +5002,7 @@ document.getElementById('cookie-decline').addEventListener('click', () => {
     document.getElementById('cookie-bar').classList.remove('show');
 });
 
-// Patch wireNewCard to inject quick view on new cards
-const origWireNewCard = wireNewCard;
-function wireNewCard(card) {
-    origWireNewCard(card);
-    const qv = document.createElement('div');
-    qv.className = 'card-quick-view';
-    qv.innerHTML = '<button class="btn-quick-view"><i class="fas fa-eye" style="margin-right:6px;"></i> Aperçu rapide</button>';
-    qv.querySelector('button').addEventListener('click', e => { e.stopPropagation(); openQuickView(card); });
-    card.querySelector('.card-img').appendChild(qv);
-    card.classList.add('reveal');
-    revealObserver.observe(card);
-}
+// wireNewCard now includes quick view + reveal — no patch needed
 
 // ===== ACTIVITY LOG =====
 let activityLog = JSON.parse(localStorage.getItem('ktb_log') || '[]');
