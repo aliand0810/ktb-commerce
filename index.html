@@ -4527,7 +4527,7 @@ function saveProduct() {
         const imgContainer = editingCard.querySelector('.card-img');
         const _onerr = `this.style.display='none';this.nextSibling||this.parentNode.appendChild(Object.assign(document.createElement('span'),{className:'card-initials',textContent:'${initials}'}))`;
         imgContainer.innerHTML = imageUrl
-            ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;padding:8px;box-sizing:border-box;" onerror="${_onerr}">`
+            ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;padding:8px;box-sizing:border-box;" onload="adaptCardImgBg(this)" onerror="${_onerr}">`
             : fallbackHtml;
         editingCard.querySelector('.card-price').innerHTML = priceHtml;
         editingCard.dataset.group = document.getElementById('edit-group').value;
@@ -4586,7 +4586,7 @@ function buildCard({ imageUrl, brand, title, priceHtml, badgeType, badgeText }) 
     const badgeHtml = (badgeType !== 'none' && badgeText) ? `<span class="card-badge ${badgeType}">${badgeText}</span>` : '';
     const initials = (brand || '?').trim().split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
     const onerr = `this.style.display='none';this.parentNode.innerHTML='<span class=\\'card-initials\\'>${initials}</span>'`;
-    const imgContent = imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;padding:8px;box-sizing:border-box;" onerror="${onerr}">` : `<span class="card-initials">${initials}</span>`;
+    const imgContent = imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;padding:8px;box-sizing:border-box;" onload="adaptCardImgBg(this)" onerror="${onerr}">` : `<span class="card-initials">${initials}</span>`;
     card.innerHTML = `
         ${badgeHtml}
         <button class="card-wishlist"><i class="far fa-heart"></i></button>
@@ -5713,6 +5713,8 @@ function renderProductsFromJSON(products) {
         if (p.stock) updateCardStockBadge(card);
     });
     applyVisibilityToAll();
+    // Adapt image backgrounds after cards rendered
+    setTimeout(applyAdaptiveBg, 200);
 }
 
 // Load catalog from GitHub — public repo, no token needed (raw CDN)
@@ -5811,6 +5813,61 @@ async function saveToGitHub() {
 </script>
 
 <script>
+// ═══════════════════════════════════════════
+// ADAPTIVE CARD IMAGE BACKGROUND
+// Sample edge pixels → set .card-img background to match image bg color
+// ═══════════════════════════════════════════
+function adaptCardImgBg(img) {
+    const cardImg = img.closest ? img.closest('.card-img') : null;
+    if (!cardImg) return;
+    try {
+        const w = img.naturalWidth  || img.width  || 100;
+        const h = img.naturalHeight || img.height || 100;
+        if (!w || !h) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        // Sample 8 edge points (corners + midpoints of each side)
+        const pts = [
+            [0,0],[w-1,0],[0,h-1],[w-1,h-1],
+            [Math.floor(w/2),0],[Math.floor(w/2),h-1],
+            [0,Math.floor(h/2)],[w-1,Math.floor(h/2)]
+        ];
+        let r=0,g=0,b=0;
+        pts.forEach(([x,y]) => {
+            const d = ctx.getImageData(x,y,1,1).data;
+            r+=d[0]; g+=d[1]; b+=d[2];
+        });
+        const n = pts.length;
+        r=Math.round(r/n); g=Math.round(g/n); b=Math.round(b/n);
+        cardImg.style.background = `rgb(${r},${g},${b})`;
+        // If near-white background, ensure text/initials contrast
+        const luminance = 0.299*r + 0.587*g + 0.114*b;
+        cardImg.style.color = luminance > 180 ? '#555' : '#fff';
+    } catch(e) {
+        // CORS tainted canvas — keep default gradient, no crash
+    }
+}
+
+// Apply to all existing card images on load
+function applyAdaptiveBg() {
+    document.querySelectorAll('.card-img img').forEach(img => {
+        if (img.complete && img.naturalWidth > 0) {
+            adaptCardImgBg(img);
+        } else {
+            img.addEventListener('load', () => adaptCardImgBg(img), { once: true });
+        }
+    });
+}
+
+// Run on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAdaptiveBg);
+} else {
+    applyAdaptiveBg();
+}
+
 /* ═══════════════════════════════════════════
    KTB SCROLL ANIMATIONS ENGINE
 ═══════════════════════════════════════════ */
