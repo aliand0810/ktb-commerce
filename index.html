@@ -508,7 +508,9 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center;
             display: block;
+            border-radius: 0;
         }
         .card-body { padding: 20px; }
         .card-brand {
@@ -3808,17 +3810,21 @@ document.querySelectorAll('.icon-btn').forEach(btn => {
 document.querySelectorAll('.btn-cart').forEach(btn => {
     btn.addEventListener('click', () => {
         const card = btn.closest('.card');
-        const emoji = card.querySelector('.card-img').textContent.trim();
-        const brand = card.querySelector('.card-brand').textContent.trim();
-        const title = card.querySelector('.card-title').textContent.trim();
+        if (!card) return;
+        const imgEl = card.querySelector('.card-img img');
+        const brand = card.querySelector('.card-brand')?.textContent.trim() || '';
+        const title = card.querySelector('.card-title')?.textContent.trim() || '';
         const price = parsePrice(card);
+        const thumb = imgEl ? imgEl.src : null;
+        const initials = brand.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
         const existing = cart.find(i => i.title === title);
         if (existing) {
             existing.qty++;
         } else {
-            cart.push({ emoji, brand, title, price, qty: 1 });
+            cart.push({ thumb, initials, brand, title, price, qty: 1 });
         }
         renderCart();
+        openCart();
         showToast(`${brand} ajouté au panier !`);
     });
 });
@@ -4519,7 +4525,7 @@ function saveProduct() {
         editingCard.querySelector('.card-title').textContent = title;
         const imgContainer = editingCard.querySelector('.card-img');
         imgContainer.innerHTML = imageUrl
-            ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:cover;">`
+            ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">`
             : fallbackHtml;
         editingCard.querySelector('.card-price').innerHTML = priceHtml;
         editingCard.dataset.group = document.getElementById('edit-group').value;
@@ -4572,7 +4578,7 @@ function buildCard({ imageUrl, brand, title, priceHtml, badgeType, badgeText }) 
     card.className = 'card';
     const badgeHtml = (badgeType !== 'none' && badgeText) ? `<span class="card-badge ${badgeType}">${badgeText}</span>` : '';
     const initials = (brand || '?').trim().split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase();
-    const imgContent = imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:cover;">` : `<span class="card-initials">${initials}</span>`;
+    const imgContent = imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">` : `<span class="card-initials">${initials}</span>`;
     card.innerHTML = `
         ${badgeHtml}
         <button class="card-wishlist"><i class="far fa-heart"></i></button>
@@ -4609,14 +4615,15 @@ function wireNewCard(card) {
     });
     card.querySelector('.btn-cart').addEventListener('click', () => {
         const imgEl = card.querySelector('.card-img img');
-        const brand = card.querySelector('.card-brand').textContent.trim();
-        const title = card.querySelector('.card-title').textContent.trim();
+        const brand = card.querySelector('.card-brand')?.textContent.trim() || '';
+        const title = card.querySelector('.card-title')?.textContent.trim() || '';
         const price = parsePrice(card);
         const thumb = imgEl ? imgEl.src : null;
-        const initials = brand.trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+        const initials = brand.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
         const existing = cart.find(i => i.title === title);
         if (existing) existing.qty++; else cart.push({ thumb, initials, brand, title, price, qty: 1 });
         renderCart();
+        openCart();
         showToast(`${brand} ajouté au panier !`);
     });
 }
@@ -4893,6 +4900,7 @@ document.getElementById('btn-qv-add').addEventListener('click', () => {
     renderCart();
     animateBadge();
     closeQuickView();
+    openCart();
     showToast(`${brand} ×${qvQty} ajouté au panier !`);
 });
 
@@ -4934,6 +4942,7 @@ injectQuickViewButtons();
 // ===== BADGE BOUNCE ANIMATION =====
 function animateBadge() {
     const badge = document.querySelector('.badge');
+    if (!badge) return;
     badge.classList.remove('badge-bounce');
     void badge.offsetWidth;
     badge.classList.add('badge-bounce');
