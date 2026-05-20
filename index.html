@@ -1359,101 +1359,116 @@
             .aps-content { padding: 20px 16px; }
         }
 
-        /* ===== ADMIN ARTICLE CARDS ===== */
-        .aac-grid {
+        /* ===== ADMIN ARTICLES LIST VIEW ===== */
+        .aac-list {
+            display: flex; flex-direction: column; gap: 0;
+            border: 1px solid var(--gray-200); border-radius: 14px;
+            overflow: hidden; background: white; margin-bottom: 20px;
+        }
+        .aac-list-header {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 14px;
-            padding: 4px 0 20px;
+            grid-template-columns: 48px 1fr 90px 160px 120px 80px 80px;
+            gap: 12px; align-items: center;
+            padding: 10px 16px;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 10px; font-weight: 700; color: var(--gray-500);
+            text-transform: uppercase; letter-spacing: 0.8px;
         }
-        .aac-card {
-            background: white;
-            border-radius: 14px;
-            border: 1px solid var(--gray-200);
-            overflow: hidden;
+        .aac-row {
+            display: grid;
+            grid-template-columns: 48px 1fr 90px 160px 120px 80px 80px;
+            gap: 12px; align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background 0.15s;
             position: relative;
-            transition: var(--transition);
-            display: flex;
-            flex-direction: column;
         }
-        .aac-card:hover { box-shadow: var(--shadow-md); border-color: transparent; }
-        .aac-card.aac-card-hidden { opacity: 0.5; }
+        .aac-row:last-child { border-bottom: none; }
+        .aac-row:hover { background: #fafafa; }
+        .aac-row.aac-row-hidden { opacity: 0.45; }
 
-        .aac-status-dot {
-            position: absolute; top: 10px; left: 10px;
-            width: 10px; height: 10px; border-radius: 50%;
-            z-index: 4; box-shadow: 0 0 0 2px white;
-        }
-        .aac-status-dot.s-ok  { background: var(--success); }
-        .aac-status-dot.s-low { background: #F59E0B; }
-        .aac-status-dot.s-out { background: #EF4444; }
-        .aac-status-dot.s-inf { background: var(--gray-400, #9ca3af); }
-
-        .aac-img-wrap {
-            height: 130px;
-            background: linear-gradient(135deg, #fafafa, #f0f0f0);
+        /* Col: thumb */
+        .aac-thumb {
+            width: 44px; height: 44px; border-radius: 10px;
+            background: linear-gradient(135deg,#f5f5f5,#ebebeb);
+            overflow: hidden; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 52px; position: relative; overflow: hidden; flex-shrink: 0;
+            position: relative;
         }
-        .aac-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-        .aac-hidden-overlay {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,0.5);
+        .aac-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .aac-thumb-initials { font-size: 14px; font-weight: 800; color: var(--primary); opacity: 0.7; }
+        .aac-thumb-masked {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.45);
             display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 11px; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase; gap: 6px;
+            border-radius: 10px;
         }
+        .aac-thumb-masked i { color: white; font-size: 13px; }
 
-        .aac-body { padding: 12px 14px; flex: 1; }
-        .aac-brand { font-size: 10px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-        .aac-title { font-size: 12px; font-weight: 600; color: var(--dark); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; margin-bottom: 5px; }
-        .aac-price { font-size: 15px; font-weight: 800; color: var(--dark); margin-bottom: 10px; }
+        /* Col: article info */
+        .aac-info { min-width: 0; }
+        .aac-info-brand { font-size: 10px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .aac-info-title { font-size: 13px; font-weight: 600; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .aac-status-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 9px; font-weight: 700; padding: 2px 7px;
+            border-radius: 99px; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .aac-status-pill.s-ok  { background: #DCFCE7; color: #166534; }
+        .aac-status-pill.s-low { background: #FEF3C7; color: #92400E; }
+        .aac-status-pill.s-out { background: #FEE2E2; color: #991B1B; }
+        .aac-status-pill.s-inf { background: var(--gray-100); color: var(--gray-500); }
+        .aac-status-pill::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
 
-        .aac-stock-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .aac-stock-label { font-size: 10px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-        .aac-stock-val { font-size: 11px; font-weight: 800; }
-        .aac-stock-val.s-ok  { color: var(--success); }
-        .aac-stock-val.s-low { color: #F59E0B; }
-        .aac-stock-val.s-out { color: #EF4444; }
-        .aac-stock-val.s-inf { color: var(--gray-500); }
+        /* Col: price */
+        .aac-col-price { font-size: 14px; font-weight: 800; color: var(--dark); }
 
-        .aac-progress-bar { height: 5px; background: var(--gray-200); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
-        .aac-progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1), background 0.3s; }
-
-        .aac-qty-row { display: flex; align-items: center; gap: 6px; }
+        /* Col: stock controls */
+        .aac-stock-ctrl { display: flex; align-items: center; gap: 5px; }
         .aac-qty-btn {
-            width: 28px; height: 28px; border-radius: 8px;
+            width: 26px; height: 26px; border-radius: 7px;
             border: 1px solid var(--gray-200); background: white;
-            cursor: pointer; font-size: 16px; font-weight: 700;
+            cursor: pointer; font-size: 15px; font-weight: 700;
             display: flex; align-items: center; justify-content: center;
             transition: var(--transition); flex-shrink: 0; line-height: 1;
             color: var(--gray-700);
         }
-        .aac-qty-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .aac-qty-btn:hover { border-color: var(--primary); color: var(--primary); background: #EEF2FF; }
         .aac-qty-btn.minus:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
         .aac-qty-input {
-            flex: 1; text-align: center; padding: 5px 4px;
-            border: 1px solid var(--gray-200); border-radius: 8px;
+            width: 52px; text-align: center; padding: 4px 4px;
+            border: 1px solid var(--gray-200); border-radius: 7px;
             font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
-            outline: none; transition: var(--transition); min-width: 0;
+            outline: none; transition: var(--transition);
         }
-        .aac-qty-input:focus { border-color: var(--primary); }
+        .aac-qty-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
 
-        .aac-footer {
-            display: flex; align-items: center; gap: 5px;
-            padding: 8px 10px; border-top: 1px solid var(--gray-200);
-            background: var(--gray-100); flex-shrink: 0;
+        /* Col: group select */
+        .aac-group-sel {
+            width: 100%; font-size: 12px; padding: 5px 8px;
+            border: 1px solid var(--gray-200); border-radius: 8px;
+            background: white; font-family: 'Inter', sans-serif;
+            color: var(--dark); outline: none; cursor: pointer;
         }
-        .aac-footer .group-select-inline { flex: 1; font-size: 11px; padding: 5px 8px; max-width: none; }
+        .aac-group-sel:focus { border-color: var(--primary); }
+
+        /* Col: visibility toggle */
+        .aac-vis-cell { display: flex; align-items: center; justify-content: center; }
+
+        /* Col: actions */
+        .aac-actions { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
         .aac-action-btn {
-            width: 28px; height: 28px; border-radius: 7px;
+            width: 30px; height: 30px; border-radius: 8px;
             border: 1px solid var(--gray-200); background: white;
-            cursor: pointer; font-size: 11px; color: var(--gray-700);
+            cursor: pointer; font-size: 12px; color: var(--gray-600);
             display: flex; align-items: center; justify-content: center;
             transition: var(--transition); flex-shrink: 0;
         }
-        .aac-action-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .aac-action-btn.del:hover { border-color: #EF4444; color: #EF4444; }
+        .aac-action-btn:hover { border-color: var(--primary); color: var(--primary); background: #EEF2FF; }
+        .aac-action-btn.del:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+
+        /* empty state */
+        .aac-empty { padding: 48px; text-align: center; color: var(--gray-500); font-size: 14px; }
 
         /* ===== STOCK DASHBOARD ===== */
         .sdash-layout { display: flex; flex-direction: column; gap: 20px; }
@@ -5140,7 +5155,7 @@ document.getElementById('edit-visible').addEventListener('change', function() {
 
 // saveProduct handles stock + visibility natively — no patch needed
 
-// ===== ARTICLES CARD GRID (enhanced) =====
+// ===== ARTICLES LIST VIEW =====
 const _origRenderArticlesPanel = renderArticlesPanel;
 renderArticlesPanel = function() {
     // Populate filter/bulk dropdowns
@@ -5149,29 +5164,32 @@ renderArticlesPanel = function() {
     if (filterSel) filterSel.innerHTML = '<option value="">Tous les groupes</option>' + groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
     if (bulkSel)   bulkSel.innerHTML   = '<option value="">Assigner groupe…</option>'  + groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
 
-    // Hide table, show/create card grid
+    // Hide original table, create/reuse list container
     const tableWrap = document.querySelector('#aps-tab-articles .aps-table-wrap');
     if (tableWrap) tableWrap.style.display = 'none';
-    let cardGrid = document.getElementById('articles-cards-container');
-    if (!cardGrid) {
-        cardGrid = document.createElement('div');
-        cardGrid.id = 'articles-cards-container';
-        cardGrid.className = 'aac-grid';
-        if (tableWrap) tableWrap.parentNode.insertBefore(cardGrid, tableWrap);
+
+    let listWrap = document.getElementById('articles-list-container');
+    if (!listWrap) {
+        listWrap = document.createElement('div');
+        listWrap.id = 'articles-list-container';
+        if (tableWrap) tableWrap.parentNode.insertBefore(listWrap, tableWrap);
+        else {
+            const tab = document.getElementById('aps-tab-articles');
+            if (tab) tab.appendChild(listWrap);
+        }
     }
 
     const cards = [...document.querySelectorAll('.card')];
     if (!cards.length) {
-        cardGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--gray-500);padding:48px;">Aucun article</div>';
+        listWrap.innerHTML = '<div class="aac-empty"><i class="fas fa-box-open" style="font-size:32px;opacity:0.3;display:block;margin-bottom:12px;"></i>Aucun article dans le catalogue</div>';
         return;
     }
 
-    const stocks = cards.map(c => getStock(c)).filter(s => s !== null);
-    const maxStock = stocks.length ? Math.max(...stocks, 1) : 50;
+    const groupOpts = (gid) => '<option value="">— Groupe —</option>' + groups.map(g =>
+        `<option value="${g.id}" ${g.id === gid ? 'selected' : ''}>${g.name}</option>`).join('');
 
-    cardGrid.innerHTML = cards.map((card, idx) => {
+    const rows = cards.map((card, idx) => {
         const imgEl   = card.querySelector('.card-img img');
-        const emoji   = card.querySelector('.card-img').textContent.trim();
         const brand   = card.querySelector('.card-brand').textContent.trim();
         const title   = card.querySelector('.card-title').textContent.trim();
         const priceEl = card.querySelector('.card-price');
@@ -5181,47 +5199,55 @@ renderArticlesPanel = function() {
         const visible = card.dataset.visible !== 'false';
         const gid     = card.dataset.group || '';
 
-        const statusClass = stock === null ? 's-inf' : stock === 0 ? 's-out' : stock <= 5 ? 's-low' : 's-ok';
-        const pct      = stock === null ? 100 : Math.round(Math.min(stock, maxStock) / maxStock * 100);
-        const barColor = stock === null ? '#9ca3af' : stock === 0 ? '#EF4444' : stock <= 5 ? '#F59E0B' : 'var(--success)';
-        const stockLabel = stock === null ? '∞' : stock === 0 ? 'Rupture' : stock <= 5 ? `${stock} — Faible` : String(stock);
+        const sc = stock === null ? 's-inf' : stock === 0 ? 's-out' : stock <= 5 ? 's-low' : 's-ok';
+        const scLabel = stock === null ? 'Illimité' : stock === 0 ? 'Rupture' : stock <= 5 ? `Faible (${stock})` : `En stock (${stock})`;
 
-        const imgHtml       = imgEl ? `<img src="${imgEl.src}" alt="${title}">` : emoji;
-        const hiddenOverlay = !visible ? '<div class="aac-hidden-overlay"><i class="fas fa-eye-slash"></i> Masqué</div>' : '';
-        const groupOpts     = '<option value="">— Aucun groupe —</option>' + groups.map(g => `<option value="${g.id}" ${g.id === gid ? 'selected' : ''}>${g.name}</option>`).join('');
+        const inits = brand.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+        const thumbHtml = imgEl
+            ? `<img src="${imgEl.src}" alt="${brand}">`
+            : `<span class="aac-thumb-initials">${inits}</span>`;
+        const maskedHtml = !visible ? '<div class="aac-thumb-masked"><i class="fas fa-eye-slash"></i></div>' : '';
 
-        return `
-        <div class="aac-card${!visible ? ' aac-card-hidden' : ''}" data-card-idx="${idx}" data-search="${brand.toLowerCase()} ${title.toLowerCase()}">
-            <div class="aac-status-dot ${statusClass}"></div>
-            <div class="aac-img-wrap">${imgHtml}${hiddenOverlay}</div>
-            <div class="aac-body">
-                <div class="aac-brand">${brand}</div>
-                <div class="aac-title" title="${title}">${title}</div>
-                <div class="aac-price">${price}</div>
-                <div class="aac-stock-head">
-                    <span class="aac-stock-label">Stock</span>
-                    <span class="aac-stock-val ${statusClass}">${stockLabel}</span>
-                </div>
-                <div class="aac-progress-bar">
-                    <div class="aac-progress-fill" style="width:${pct}%;background:${barColor};"></div>
-                </div>
-                <div class="aac-qty-row">
-                    <button class="aac-qty-btn minus" onclick="quickStockChange(${idx},-1)" title="Retirer 1">−</button>
-                    <input type="number" class="aac-qty-input" value="${stock !== null ? stock : ''}" placeholder="∞" min="0" onchange="aacSetStock(this,${idx})">
-                    <button class="aac-qty-btn" onclick="quickStockChange(${idx},+1)" title="Ajouter 1">+</button>
-                </div>
+        return `<div class="aac-row${!visible ? ' aac-row-hidden' : ''}" data-card-idx="${idx}" data-search="${brand.toLowerCase()} ${title.toLowerCase()}">
+            <div class="aac-thumb">${thumbHtml}${maskedHtml}</div>
+            <div class="aac-info">
+                <div class="aac-info-brand">${brand}</div>
+                <div class="aac-info-title" title="${title}">${title}</div>
+                <span class="aac-status-pill ${sc}">${scLabel}</span>
             </div>
-            <div class="aac-footer">
-                <select class="group-select-inline" onchange="assignGroupToCard(this,${idx})">${groupOpts}</select>
-                <label class="toggle-switch" style="transform:scale(0.8);flex-shrink:0;" title="${visible ? 'Masquer' : 'Afficher'}">
-                    <input type="checkbox" ${visible ? 'checked' : ''} onchange="inlineSetVisibility(this,${idx});refreshAacCardByIdx(${idx})">
+            <div class="aac-col-price">${price}</div>
+            <div class="aac-stock-ctrl">
+                <button class="aac-qty-btn minus" onclick="quickStockChange(${idx},-1)" title="−1">−</button>
+                <input type="number" class="aac-qty-input" value="${stock !== null ? stock : ''}" placeholder="∞" min="0" onchange="aacSetStock(this,${idx})">
+                <button class="aac-qty-btn" onclick="quickStockChange(${idx},+1)" title="+1">+</button>
+            </div>
+            <select class="aac-group-sel" onchange="assignGroupToCard(this,${idx})">${groupOpts(gid)}</select>
+            <div class="aac-vis-cell">
+                <label class="toggle-switch" title="${visible ? 'Masquer' : 'Afficher'}">
+                    <input type="checkbox" ${visible ? 'checked' : ''} onchange="inlineSetVisibility(this,${idx});refreshAacRowByIdx(${idx})">
                     <span class="toggle-slider"></span>
                 </label>
+            </div>
+            <div class="aac-actions">
                 <button class="aac-action-btn" onclick="openEditModal(document.querySelectorAll('.card')[${idx}])" title="Modifier"><i class="fas fa-pen"></i></button>
                 <button class="aac-action-btn del" onclick="deleteCard(document.querySelectorAll('.card')[${idx}]);renderArticlesPanel();" title="Supprimer"><i class="fas fa-trash"></i></button>
             </div>
         </div>`;
     }).join('');
+
+    listWrap.innerHTML = `
+        <div class="aac-list">
+            <div class="aac-list-header">
+                <div></div>
+                <div>Article</div>
+                <div>Prix</div>
+                <div>Stock</div>
+                <div>Groupe</div>
+                <div style="text-align:center;">Visible</div>
+                <div></div>
+            </div>
+            ${rows}
+        </div>`;
 };
 
 // ===== HELPERS CARTES ADMIN =====
@@ -5243,40 +5269,33 @@ function aacSetStock(input, cardIdx) {
     logActivity('edit', `Stock modifié : ${card.querySelector('.card-brand').textContent.trim()}`, `→ ${input.value || '∞'}`);
 }
 
-function refreshAacCardByIdx(cardIdx) {
-    const card    = [...document.querySelectorAll('.card')][cardIdx];
-    const aacCard = document.querySelector(`.aac-card[data-card-idx="${cardIdx}"]`);
-    if (!card || !aacCard) return;
+function refreshAacCardByIdx(cardIdx) { refreshAacRowByIdx(cardIdx); }
 
-    const stocks   = [...document.querySelectorAll('.card')].map(c => getStock(c)).filter(s => s !== null);
-    const maxStock = stocks.length ? Math.max(...stocks, 1) : 50;
-    const stock    = getStock(card);
-    const visible  = card.dataset.visible !== 'false';
+function refreshAacRowByIdx(cardIdx) {
+    const card = [...document.querySelectorAll('.card')][cardIdx];
+    const row  = document.querySelector(`.aac-row[data-card-idx="${cardIdx}"]`);
+    if (!card || !row) return;
 
-    const statusClass = stock === null ? 's-inf' : stock === 0 ? 's-out' : stock <= 5 ? 's-low' : 's-ok';
-    const pct      = stock === null ? 100 : Math.round(Math.min(stock, maxStock) / maxStock * 100);
-    const barColor = stock === null ? '#9ca3af' : stock === 0 ? '#EF4444' : stock <= 5 ? '#F59E0B' : 'var(--success)';
-    const stockLabel = stock === null ? '∞' : stock === 0 ? 'Rupture' : stock <= 5 ? `${stock} — Faible` : String(stock);
+    const stock   = getStock(card);
+    const visible = card.dataset.visible !== 'false';
+    const sc = stock === null ? 's-inf' : stock === 0 ? 's-out' : stock <= 5 ? 's-low' : 's-ok';
+    const scLabel = stock === null ? 'Illimité' : stock === 0 ? 'Rupture' : stock <= 5 ? `Faible (${stock})` : `En stock (${stock})`;
 
-    aacCard.querySelector('.aac-status-dot').className = `aac-status-dot ${statusClass}`;
-    const fill = aacCard.querySelector('.aac-progress-fill');
-    fill.style.width      = pct + '%';
-    fill.style.background = barColor;
-    const valEl = aacCard.querySelector('.aac-stock-val');
-    valEl.textContent = stockLabel;
-    valEl.className   = `aac-stock-val ${statusClass}`;
-    aacCard.querySelector('.aac-qty-input').value = stock !== null ? stock : '';
+    const pill = row.querySelector('.aac-status-pill');
+    if (pill) { pill.className = `aac-status-pill ${sc}`; pill.textContent = scLabel; }
+    const inp = row.querySelector('.aac-qty-input');
+    if (inp) inp.value = stock !== null ? stock : '';
 
-    aacCard.classList.toggle('aac-card-hidden', !visible);
-    const imgWrap  = aacCard.querySelector('.aac-img-wrap');
-    const existing = aacCard.querySelector('.aac-hidden-overlay');
-    if (!visible && !existing) {
-        const ov = document.createElement('div');
-        ov.className = 'aac-hidden-overlay';
-        ov.innerHTML = '<i class="fas fa-eye-slash"></i> Masqué';
-        imgWrap.appendChild(ov);
-    } else if (visible && existing) {
-        existing.remove();
+    row.classList.toggle('aac-row-hidden', !visible);
+    const thumb = row.querySelector('.aac-thumb');
+    if (thumb) {
+        const existing = thumb.querySelector('.aac-thumb-masked');
+        if (!visible && !existing) {
+            const m = document.createElement('div');
+            m.className = 'aac-thumb-masked';
+            m.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            thumb.appendChild(m);
+        } else if (visible && existing) { existing.remove(); }
     }
 }
 
@@ -5295,14 +5314,14 @@ function inlineSetVisibility(toggle, idx) {
 
 function filterArticlesTable(q) {
     const gFilter = document.getElementById('articles-filter-group')?.value || '';
-    document.querySelectorAll('.aac-card').forEach(aacCard => {
-        const idx  = parseInt(aacCard.dataset.cardIdx);
+    document.querySelectorAll('.aac-row').forEach(row => {
+        const idx  = parseInt(row.dataset.cardIdx);
         const card = [...document.querySelectorAll('.card')][idx];
         if (!card) return;
-        const text   = (aacCard.dataset.search || '');
+        const text   = (row.dataset.search || '');
         const matchQ = !q || text.includes(q.toLowerCase());
         const matchG = !gFilter || card.dataset.group === gFilter;
-        aacCard.style.display = (matchQ && matchG) ? '' : 'none';
+        row.style.display = (matchQ && matchG) ? '' : 'none';
     });
 }
 
