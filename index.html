@@ -5702,8 +5702,12 @@ async function saveToGitHub() {
     const repo   = localStorage.getItem('ktb_gh_repo');
     const branch = localStorage.getItem('ktb_gh_branch') || 'main';
     const token  = localStorage.getItem('ktb_gh_token');
-    if (!repo || !token) {
-        showToast('Configurez GitHub dans Paramètres admin → GitHub', 'error');
+    if (!token) {
+        showToast('Token GitHub manquant → Paramètres → GitHub → colle ton token', 'error');
+        return;
+    }
+    if (!repo) {
+        showToast('Repo GitHub manquant → Paramètres → GitHub', 'error');
         return;
     }
     const btn = document.getElementById('btn-gh-save');
@@ -5739,15 +5743,19 @@ async function saveToGitHub() {
 
 // Init GitHub settings fields + auto-load from public repo on startup
 (function() {
-    const repo   = localStorage.getItem('ktb_gh_repo')   || KTB_GH_DEFAULT_REPO;
-    const branch = localStorage.getItem('ktb_gh_branch') || KTB_GH_DEFAULT_BRANCH;
-    const token  = localStorage.getItem('ktb_gh_token')  || '';
+    // Set defaults in localStorage if not already configured
+    if (!localStorage.getItem('ktb_gh_repo'))   localStorage.setItem('ktb_gh_repo',   KTB_GH_DEFAULT_REPO);
+    if (!localStorage.getItem('ktb_gh_branch')) localStorage.setItem('ktb_gh_branch', KTB_GH_DEFAULT_BRANCH);
+
+    const repo   = localStorage.getItem('ktb_gh_repo');
+    const branch = localStorage.getItem('ktb_gh_branch');
+    const token  = localStorage.getItem('ktb_gh_token') || '';
     const elRepo   = document.getElementById('setting-gh-repo');
     const elBranch = document.getElementById('setting-gh-branch');
     const elToken  = document.getElementById('setting-gh-token');
     if (elRepo)   elRepo.value   = repo;
     if (elBranch) elBranch.value = branch;
-    if (elToken && token)  elToken.value  = token;
+    if (elToken && token) elToken.value = token;
     // Auto-load on startup — no token needed for public repo
     loadFromGitHub(false);
 })();
